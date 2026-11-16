@@ -1,0 +1,27 @@
+REPDay phone-only setup (Android)
+
+WHAT THIS PACKAGE DOES
+- Installs as a home-screen PWA after HTTPS hosting.
+- Caches the app shell for offline opening after the first successful load.
+- Stores workout data locally in this browser/app profile.
+- Includes the daily schedule, calendar, streak tracking and reminder setting.
+
+IMPORTANT NOTIFICATION LIMIT
+The current app's reminder check runs while the app is open or reopened. Android may suspend browser pages when closed, so this package does NOT guarantee a reminder at the exact time with the app closed.
+A dependable scheduled reminder needs a native Android app using Android's alarm/notification APIs, or a push-notification service with a server. Do not rely on this PWA alone for critical reminders.
+
+PHONE-ONLY INSTALL STEPS
+1. In Chrome on your Android phone, create a GitHub account if you do not already have one.
+2. Create a public repository named repday-app.
+3. Upload all files from this ZIP to the repository's root.
+4. In the repository, open Settings > Pages.
+5. Choose Deploy from a branch, select main and /(root), then Save.
+6. Wait for GitHub Pages to publish. Open the published HTTPS address in Chrome.
+7. Use Chrome menu > Install app (or Add to Home screen).
+
+APK PACKAGING
+After hosting, open https://www.pwabuilder.com/ in Chrome and enter the published HTTPS address. Follow its Android package flow. Review the generated package and permissions before installing.
+Packaging the PWA as an APK does not by itself add reliable native scheduled alarms; that requires adding native Android code and rebuilding.
+
+DATA
+Workout data is saved in local browser storage. Avoid clearing app/browser storage unless you have exported or backed up your data.

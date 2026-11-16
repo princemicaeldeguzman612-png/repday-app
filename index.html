@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#101827">
+<title>RepDay — Calisthenics Tracker</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<style>
+:root{--bg:#0b1220;--panel:#131e30;--panel2:#1a2940;--text:#f4f7fb;--muted:#9aabc1;--accent:#8be0b0;--line:#293951;--warn:#ffd27a}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#101b2c,#0b1220 45%);color:var(--text);font:16px system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh}
+.app{max-width:680px;margin:auto;padding:env(safe-area-inset-top) 16px calc(90px + env(safe-area-inset-bottom))}
+header{display:flex;justify-content:space-between;align-items:center;padding:20px 2px 14px}.brand{font-weight:900;letter-spacing:.08em;font-size:19px}.brand span{color:var(--accent)}.small{font-size:12px;color:var(--muted)}
+h1{font-size:28px;margin:5px 0}h2{font-size:18px;margin:0 0 12px}
+.card{background:rgba(19,30,48,.96);border:1px solid var(--line);border-radius:20px;padding:17px;margin:12px 0;box-shadow:0 8px 28px #0002}
+.hero{background:linear-gradient(135deg,#193a39,#17263b);border-color:#31594f}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:15px}.stat{background:#07121c66;border-radius:13px;padding:11px}.stat b{display:block;font-size:23px}.stat span{font-size:11px;color:#bfd0d9}
+button,input,select,textarea{font:inherit}button{border:0;border-radius:13px;padding:12px 15px;background:var(--accent);color:#10251b;font-weight:800;cursor:pointer}button.secondary{background:var(--panel2);color:var(--text);border:1px solid var(--line)}button.danger{background:#492b35;color:#ffdce3}button:disabled{opacity:.45}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.exercise{display:flex;align-items:center;gap:11px;padding:12px 0;border-bottom:1px solid var(--line)}.exercise:last-child{border:0}.exercise input{width:19px;height:19px;accent-color:var(--accent)}.exercise strong{display:block}.exercise small{color:var(--muted)}
+nav{position:fixed;bottom:0;left:0;right:0;background:#0b1220ed;backdrop-filter:blur(14px);border-top:1px solid var(--line);display:flex;justify-content:center;gap:4px;padding:9px 8px calc(9px + env(safe-area-inset-bottom));z-index:4}
+nav button{flex:1;max-width:160px;background:transparent;color:var(--muted);padding:10px 5px;font-size:12px}nav button.active{background:var(--panel2);color:var(--accent)}
+.page{display:none}.page.active{display:block}
+input,select,textarea{width:100%;padding:12px;background:#0b1524;color:var(--text);border:1px solid var(--line);border-radius:11px;margin:5px 0 12px}
+label{font-size:13px;color:var(--muted)}.daygrid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}.day{background:#0d1928;border:1px solid var(--line);border-radius:10px;padding:9px 2px;text-align:center;font-size:12px}.day.done{background:#173c31;border-color:#39765d}.day.today{outline:2px solid var(--accent)}
+.day b{display:block;font-size:14px;margin-bottom:4px}.muted{color:var(--muted)}.pill{border:1px solid var(--line);padding:5px 9px;border-radius:99px;font-size:11px;color:var(--muted)}
+hr{border:0;border-top:1px solid var(--line);margin:15px 0}.notice{font-size:12px;line-height:1.5;color:var(--muted)}.empty{text-align:center;padding:24px;color:var(--muted)}
+#toast{position:fixed;bottom:85px;left:50%;transform:translateX(-50%);background:#e9fff2;color:#10251b;padding:11px 16px;border-radius:12px;font-weight:700;display:none;z-index:10;max-width:90%}
+</style>
+</head>
+<body>
+<div class="app">
+<header><div><div class="brand">REP<span>DAY</span></div><div class="small">CALISTHENICS • CONSISTENCY TRACKER</div></div><span class="pill" id="dateLabel">TODAY</span></header>
+
+<section id="home" class="page active">
+ <div class="card hero">
+  <div class="row"><span class="pill">YOUR CURRENT CYCLE</span><span id="status" class="small">Ready when you are</span></div>
+  <h1 id="dayTitle">Day 0</h1><div class="muted" id="daySub">Start your first workout when you're ready.</div>
+  <div class="stats">
+   <div class="stat"><b id="streak">0</b><span>DAY STREAK</span></div>
+   <div class="stat"><b id="total">0</b><span>WORKOUTS DONE</span></div>
+   <div class="stat"><b id="best">0</b><span>BEST STREAK</span></div>
+  </div>
+ </div>
+ <div class="card">
+  <div class="row"><h2>Today's plan</h2><span id="planTag" class="pill">Workout</span></div>
+  <div id="todayExercises"></div>
+  <div class="actions"><button id="completeBtn" onclick="completeToday()">✓ Mark day complete</button><button class="secondary" onclick="showPage('schedule')">Edit plan</button></div>
+  <p class="notice">Only mark a day complete after finishing the planned session. Rest days can be scheduled and count as planned recovery, not missed workouts.</p>
+ </div>
+ <div class="card">
+  <h2>Next 7 days</h2><div class="daygrid" id="weekGrid"></div>
+ </div>
+</section>
+
+<section id="schedule" class="page">
+ <h1>Workout schedule</h1><p class="muted">Set a different routine for each weekday. Keep rest and lighter days in your plan.</p>
+ <div class="card">
+  <label for="weekday">Choose day</label><select id="weekday" onchange="loadDayEditor()"></select>
+  <label for="dayType">Day type</label><select id="dayType" onchange="toggleExerciseEditor()"><option value="workout">Workout</option><option value="rest">Rest / recovery</option></select>
+  <div id="exerciseEditor">
+   <label for="exerciseText">Exercises (one per line; include reps or time)</label>
+   <textarea id="exerciseText" rows="7" placeholder="Incline push-ups — 2 sets of 6&#10;Bodyweight squats — 2 sets of 10&#10;Plank — 2 x 15 seconds"></textarea>
+  </div>
+  <button onclick="saveDay()">Save this day</button>
+ </div>
+ <div class="card"><h2>Starter plan idea</h2><p class="notice">Alternate manageable strength sessions with recovery days. Example: Monday upper body, Tuesday lower body, Wednesday recovery, Thursday full body, Friday recovery, Saturday light full body, Sunday rest. Adjust exercises and difficulty to your current ability, and stop if you feel pain.</p><button class="secondary" onclick="applyStarter()">Use starter schedule</button></div>
+</section>
+
+<section id="calendar" class="page">
+ <h1>Calendar</h1><div class="card">
+  <div class="row"><button class="secondary" onclick="changeMonth(-1)">‹</button><h2 id="monthTitle"></h2><button class="secondary" onclick="changeMonth(1)">›</button></div>
+  <div class="daygrid" style="margin:12px 0 7px"><div class="small">Sun</div><div class="small">Mon</div><div class="small">Tue</div><div class="small">Wed</div><div class="small">Thu</div><div class="small">Fri</div><div class="small">Sat</div></div>
+  <div class="daygrid" id="monthGrid"></div><p class="notice">Green = completed. Tap a date to view its plan.</p>
+ </div><div class="card" id="selectedDateCard"><h2>Selected day</h2><div class="muted">Choose a date on the calendar.</div></div>
+</section>
+
+<section id="settings" class="page">
+ <h1>Settings</h1>
+ <div class="card">
+  <h2>Daily reminder</h2>
+  <label for="reminderTime">Reminder time</label><input type="time" id="reminderTime" value="18:00">
+  <button onclick="saveReminder()">Save reminder</button>
+  <div class="actions"><button class="secondary" onclick="enableNotifications()">Enable notifications</button><button class="secondary" onclick="testReminder()">Test notification</button></div>
+  <p class="notice">Important: browser notifications are supported on Android when installed and permission is granted. This version checks reminder time while the app is open or when you reopen it. It cannot guarantee an exact-time alert while Android has fully stopped the app; reliable closed-app scheduled alerts need a push-notification server or a native Android app.</p>
+ </div>
+ <div class="card">
+  <h2>Streak settings</h2><label for="missRule">If you miss a planned workout day</label><select id="missRule"><option value="reset">Reset current streak</option><option value="pause">Pause streak (don't add a day)</option></select>
+  <button onclick="saveRule()">Save rule</button>
+  <hr><button class="danger" onclick="resetCycle()">Reset cycle and history</button>
+  <p class="notice">Reset permanently clears this device's saved workout history.</p>
+ </div>
+ <div class="card"><h2>Install on Android</h2><p class="notice">Open this app's hosted link in Chrome, tap the browser menu, then choose “Install app” or “Add to Home screen”. The files need to be hosted over HTTPS for installation and notifications to work.</p></div>
+</section>
+</div>
+<nav>
+ <button class="active" data-page="home" onclick="showPage('home')">⌂<br>Today</button>
+ <button data-page="schedule" onclick="showPage('schedule')">▤<br>Schedule</button>
+ <button data-page="calendar" onclick="showPage('calendar')">▦<br>Calendar</button>
+ <button data-page="settings" onclick="showPage('settings')">⚙<br>Settings</button>
+</nav>
+<div id="toast"></div>
+<script>
+const names=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const key='repday_v1';
+const defaultSchedule=()=>Object.fromEntries(names.map((n,i)=>[i,{type:'workout',items:['Incline push-ups — 2 sets of 6','Bodyweight squats — 2 sets of 10','Plank — 2 x 15 seconds']}]));
+let data=JSON.parse(localStorage.getItem(key)||'null')||{schedule:defaultSchedule(),completed:[],startDate:null,reminder:'18:00',missRule:'reset'};
+let viewMonth=new Date();viewMonth.setDate(1);let selectedDate=new Date();let checks={};
+function save(){localStorage.setItem(key,JSON.stringify(data));}
+function iso(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function dateFrom(s){let [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)}
+function today(){return iso(new Date())}
+function toast(s){let t=document.getElementById('toast');t.textContent=s;t.style.display='block';setTimeout(()=>t.style.display='none',2400)}
+function showPage(p){document.querySelectorAll('.page').forEach(x=>x.classList.toggle('active',x.id===p));document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x.dataset.page===p));if(p==='calendar')renderCalendar()}
+function currentDayNumber(){if(!data.startDate)return 0;let diff=Math.floor((dateFrom(today())-dateFrom(data.startDate))/86400000);return Math.max(0,diff)}
+function streak(){let s=0,d=new Date();while(data.completed.includes(iso(d))){s++;d.setDate(d.getDate()-1)}if(s===0){d.setDate(d.getDate()-1);while(data.completed.includes(iso(d))){s++;d.setDate(d.getDate()-1)}}return s}
+function bestStreak(){let dates=[...data.completed].sort(),best=0,run=0,prev=null;for(let x of dates){let d=dateFrom(x);if(prev && (d-prev)/86400000===1)run++;else run=1;best=Math.max(best,run);prev=d}return best}
+function renderHome(){
+ let n=currentDayNumber(),done=data.completed.includes(today()),plan=data.schedule[new Date().getDay()]||{type:'rest',items:[]};
+ document.getElementById('dateLabel').textContent=new Date().toLocaleDateString(undefined,{month:'short',day:'numeric'});
+ document.getElementById('dayTitle').textContent='Day '+n;document.getElementById('daySub').textContent=data.startDate?'Cycle started '+dateFrom(data.startDate).toLocaleDateString():'Your cycle begins when you complete your first planned day.';
+ document.getElementById('streak').textContent=streak();document.getElementById('total').textContent=data.completed.length;document.getElementById('best').textContent=bestStreak();
+ document.getElementById('status').textContent=done?'Completed today ✓':'Keep it steady';
+ document.getElementById('planTag').textContent=plan.type==='rest'?'Recovery day':'Workout';
+ let el=document.getElementById('todayExercises');el.innerHTML='';
+ if(plan.type==='rest'){el.innerHTML='<p class="muted">Today is a planned recovery day. Gentle mobility or an easy walk is optional.</p>'}
+ else {plan.items.forEach((it,i)=>{let div=document.createElement('div');div.className='exercise';let cb=document.createElement('input');cb.type='checkbox';cb.checked=!!checks[i];cb.onchange=()=>checks[i]=cb.checked;let txt=document.createElement('div');txt.innerHTML='<strong></strong><small>Exercise '+(i+1)+'</small>';txt.querySelector('strong').textContent=it;div.append(cb,txt);el.append(div)})}
+ let b=document.getElementById('completeBtn');b.disabled=done;b.textContent=done?'✓ Day completed':'✓ Mark day complete';
+ let g=document.getElementById('weekGrid');g.innerHTML='';for(let i=0;i<7;i++){let d=new Date();d.setDate(d.getDate()+i);let x=document.createElement('div');x.className='day'+(data.completed.includes(iso(d))?' done':'')+(i===0?' today':'');x.innerHTML='<b>'+d.getDate()+'</b>'+d.toLocaleDateString(undefined,{weekday:'short'});g.append(x)}
+}
+function completeToday(){if(data.completed.includes(today()))return;if(!data.startDate)data.startDate=today();data.completed.push(today());save();renderHome();toast('Workout day recorded. Nice work!')}
+function loadDayEditor(){let i=+document.getElementById('weekday').value,p=data.schedule[i]||{type:'rest',items:[]};document.getElementById('dayType').value=p.type;document.getElementById('exerciseText').value=p.items.join('\n');toggleExerciseEditor()}
+function toggleExerciseEditor(){document.getElementById('exerciseEditor').style.display=document.getElementById('dayType').value==='rest'?'none':'block'}
+function saveDay(){let i=+document.getElementById('weekday').value,type=document.getElementById('dayType').value,items=document.getElementById('exerciseText').value.split('\n').map(x=>x.trim()).filter(Boolean);if(type==='workout'&&!items.length){toast('Add at least one exercise.');return}data.schedule[i]={type,items};save();renderHome();toast(names[i]+' saved.')}
+function applyStarter(){data.schedule={0:{type:'rest',items:[]},1:{type:'workout',items:['Incline or regular push-ups — 2 sets of 6–10','Bodyweight squats — 2 sets of 8–12','Plank — 2 x 15–20 seconds']},2:{type:'workout',items:['Glute bridges — 2 sets of 10','Reverse lunges — 2 sets of 6 each side','Dead bug — 2 sets of 8']},3:{type:'rest',items:[]},4:{type:'workout',items:['Incline push-ups — 2 sets of 6–10','Bodyweight squats — 2 sets of 8–12','Bird dog — 2 sets of 8']},5:{type:'rest',items:[]},6:{type:'workout',items:['Easy full-body practice — 1–2 comfortable sets','Gentle mobility']}};save();loadDayEditor();renderHome();toast('Starter schedule applied.')}
+function renderCalendar(){let y=viewMonth.getFullYear(),m=viewMonth.getMonth();document.getElementById('monthTitle').textContent=viewMonth.toLocaleDateString(undefined,{month:'long',year:'numeric'});let first=new Date(y,m,1).getDay(),days=new Date(y,m+1,0).getDate(),g=document.getElementById('monthGrid');g.innerHTML='';for(let i=0;i<first;i++){let e=document.createElement('div');g.append(e)}for(let n=1;n<=days;n++){let d=new Date(y,m,n),s=iso(d),e=document.createElement('button');e.className='day'+(data.completed.includes(s)?' done':'')+(s===today()?' today':'');e.style.color='var(--text)';e.style.padding='10px 0';e.textContent=n;e.onclick=()=>selectDate(d);g.append(e)}selectDate(selectedDate)}
+function selectDate(d){selectedDate=d;let s=iso(d),p=data.schedule[d.getDay()]||{type:'rest',items:[]},card=document.getElementById('selectedDateCard');card.innerHTML='<h2>'+d.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'})+'</h2><p class="muted">'+(data.completed.includes(s)?'Completed ✓':p.type==='rest'?'Recovery day':'Scheduled workout')+'</p>'+(p.items||[]).map(x=>'<div class="exercise">'+escapeHtml(x)+'</div>').join('')}
+function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function changeMonth(n){viewMonth.setMonth(viewMonth.getMonth()+n);renderCalendar()}
+function saveReminder(){data.reminder=document.getElementById('reminderTime').value||'18:00';save();toast('Reminder time saved.');checkReminder()}
+function saveRule(){data.missRule=document.getElementById('missRule').value;save();toast('Streak rule saved.')}
+async function enableNotifications(){if(!('Notification'in window)){toast('Notifications are not supported in this browser.');return}let p=await Notification.requestPermission();toast(p==='granted'?'Notifications enabled.':'Notification permission not granted.')}
+function testReminder(){if(!('Notification'in window)||Notification.permission!=='granted'){toast('Enable notifications first.');return}new Notification('RepDay reminder',{body:'Your planned session is ready when you are.'})}
+function checkReminder(){if(!('Notification'in window)||Notification.permission!=='granted')return;let now=new Date(),hhmm=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0'),stamp=today()+'-'+hhmm;if(hhmm===data.reminder&&localStorage.getItem('repday_last_notice')!==stamp&&!data.completed.includes(today())){new Notification('RepDay — workout reminder',{body:'Check today’s plan and record your session when finished.'});localStorage.setItem('repday_last_notice',stamp)}}
+function resetCycle(){if(!confirm('Clear your cycle start date and all completed workout history?'))return;data.startDate=null;data.completed=[];save();renderHome();toast('Cycle and history reset.')}
+names.forEach((n,i)=>{let o=document.createElement('option');o.value=i;o.textContent=n;document.getElementById('weekday').append(o)});document.getElementById('weekday').value=new Date().getDay();loadDayEditor();document.getElementById('reminderTime').value=data.reminder;document.getElementById('missRule').value=data.missRule;renderHome();checkReminder();setInterval(checkReminder,30000);
+if('serviceWorker'in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body></html>
