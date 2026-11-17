@@ -146,5 +146,10 @@ function checkReminder(){if(!('Notification'in window)||Notification.permission!
 function resetCycle(){if(!confirm('Clear your cycle start date and all completed workout history?'))return;data.startDate=null;data.completed=[];save();renderHome();toast('Cycle and history reset.')}
 names.forEach((n,i)=>{let o=document.createElement('option');o.value=i;o.textContent=n;document.getElementById('weekday').append(o)});document.getElementById('weekday').value=new Date().getDay();loadDayEditor();document.getElementById('reminderTime').value=data.reminder;document.getElementById('missRule').value=data.missRule;renderHome();checkReminder();setInterval(checkReminder,30000);
 if('serviceWorker'in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js");
+  });
+}
 </script>
 </body></html>
